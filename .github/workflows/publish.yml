@@ -81,7 +81,9 @@ jobs:
             echo "Release $RELEASE_TAG already exists; leaving its assets unchanged."
             exit 0
           fi
-          existing_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null || true)
+          if ! existing_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null); then
+            existing_sha=""
+          fi
           if [ -n "$existing_sha" ] && [ "$existing_sha" != "$GITHUB_SHA" ]; then
             echo "Existing tag points elsewhere; package that exact revision before releasing."
             exit 1
