@@ -1,0 +1,92 @@
+name: Check, package and publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: metalwars-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lua checks and install archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lua5.1
+      - name: Check addon, package and site
+        run: python3 scripts/check.py
+      - name: Save install archive
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: MetalWars-${{ github.sha }}
+          path: dist/*
+          if-no-files-found: error
+      - name: Save Pages site
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: _site
+
+  pages:
+    name: Publish download page
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  release:
+    name: Publish versioned alpha
+    if: startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: MetalWars-${{ github.sha }}
+          path: dist
+      - name: Publish install ZIPs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/^## Version: //p' addon/MetalWars/MetalWars.toc)
+          if [ "$GITHUB_REF_TYPE" != tag ]; then RELEASE_TAG="v$version"; fi
+          test "$RELEASE_TAG" = "v$version"
+          if gh release view "$RELEASE_TAG" --json tagName > /dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; leaving its assets unchanged."
+            exit 0
+          fi
+          existing_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha 2>/dev/null || true)
+          if [ -n "$existing_sha" ] && [ "$existing_sha" != "$GITHUB_SHA" ]; then
+            echo "Existing tag points elsewhere; package that exact revision before releasing."
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            "dist/MetalWars-$version.zip" dist/MetalWars-latest.zip dist/SHA256SUMS \
+            --target "$GITHUB_SHA" --prerelease --title "MetalWars $version alpha" \
+            --notes-file RELEASE_NOTES.md

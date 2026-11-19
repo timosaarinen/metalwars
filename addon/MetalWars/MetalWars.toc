@@ -1,0 +1,15 @@
+## Interface: 16001
+## Title: MetalWars
+## Notes: Level-19 Warsong Gulch companion for warrior and paladin, with Flagstack on the side.
+## Author: Timo Saarinen
+## Version: 0.1.0
+## SavedVariables: MetalWarsDB
+## IconTexture: Interface\Icons\INV_Axe_04
+## X-Website: https://timosaarinen.github.io/metalwars/
+## X-License: MIT
+
+Core.lua
+Classes.lua
+HUD.lua
+Blocks.lua
+Game.lua

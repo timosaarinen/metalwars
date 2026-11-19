@@ -1,0 +1,36 @@
+METALWARS 0.1.0 ALPHA
+WoW Forever 1.60.1 / Interface 16001
+
+1. Close World of Warcraft.
+2. Extract this ZIP. Copy the single MetalWars folder to your Forever client's
+   Interface/AddOns folder. Usually:
+   World of Warcraft/_forever_/Interface/AddOns/MetalWars/MetalWars.toc
+   Use Battle.net's Open game directory option to find the actual installation.
+3. Restart the game and enable MetalWars on the character-select AddOns menu.
+4. Log in and type /mw help. Try /mw outside combat to inspect the helper panel.
+
+/mw          Toggle the WSG helper panel
+/mw auto     Restore automatic WSG visibility
+/mw blocks   Open or close Flagstack
+/mw flag     Toggle the manual flag-carrier reminder
+/mw reset    Reset the helper panel position
+/mw status   Print client/addon diagnostics
+
+Flagstack opens paused. Click Resume to play. Arrow keys move/rotate/soft-drop;
+Space hard-drops; P pauses; Escape closes. Resume via the button. Combat, death,
+world transitions and WSG objective messages pause and close the game.
+
+The HUD displays cooldowns supplied by the client. It does not cast spells,
+change equipment, send chat or decide when a spell is usable. A question mark
+means cooldown information was unavailable. A dash means the spell is not known.
+Flag state can be hidden by the client; /mw flag is a manual reminder, not a
+verified match-state override. Stay alert to the actual battleground.
+
+This alpha is source-checked and locally tested, but has not been tested inside
+the live Forever client. Please report /mw status and Lua errors at:
+https://github.com/timosaarinen/metalwars/issues
+
+Updates: close the game, replace the MetalWars addon folder, restart.
+Do not delete your WTF folder: it contains saved addon settings and best score.
+
+https://timosaarinen.github.io/metalwars/
